@@ -1,12 +1,18 @@
 from fastapi import APIRouter ,UploadFile ,File , Form
 from typing import Annotated
+from .. import schemas
+import os
+from datetime import datetime,timezone 
+from ..utils import file_handler as fh
 
 router = APIRouter(
     prefix= "/upload",
     tags = ["Upload"]
 )
 
-@router.post("/")
+UPLOAD_DIR = "static/firmware"
+
+@router.post("/" , response_model= schemas.FirmwareUploadResponse)
 async def get_firmware(
     firmware_file : Annotated[UploadFile, File()],
     firmware_name : Annotated[str, Form()],
@@ -14,10 +20,15 @@ async def get_firmware(
     firmware_description : Annotated[str, Form()],
     firmware_target_devices : Annotated[str, Form()],
 ):
+    
+    firmware_filename,upload_time = await fh.save_firmware_file(firmware_file)
+    
+    
     return {
         "firmware_name" : firmware_name,
         "firmware_version" : firmware_version,
         "firmware_description" : firmware_description,
         "firmware_target_devices" : firmware_target_devices,
-        "firmware_filetype" : firmware_file.content_type
+        "firmware_filename" : firmware_filename,
+        "uploaded_at" : upload_time
     }
