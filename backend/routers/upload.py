@@ -1,4 +1,4 @@
-from fastapi import APIRouter ,UploadFile ,File , Form,Depends
+from fastapi import APIRouter ,UploadFile ,File , Form,Depends, HTTPException, status
 from typing import Annotated
 from sqlalchemy.orm import Session
 from .. import schemas
@@ -13,10 +13,9 @@ router = APIRouter(
     tags = ["Upload"]
 )
 
-UPLOAD_DIR = "static/firmware"
 
 @router.post("/" , response_model= schemas.FirmwareUploadResponse)
-async def get_firmware(
+async def upload_firmware(
     firmware_file : Annotated[UploadFile, File()],
     firmware_name : Annotated[str, Form()],
     firmware_version : Annotated[str, Form()],
@@ -24,7 +23,19 @@ async def get_firmware(
     firmware_target_devices : Annotated[str, Form()],
     db : Session = Depends(get_db)
     ):
-    
+    # Check file extension
+    if not firmware_file.filename.endswith(".bin"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only .bin firmware files are allowed!"
+        )
+
+    # checking file media type
+    if firmware_file.content_type != "application/octet-stream":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type!"
+        )
     firmware_filename,upload_time = await fh.save_firmware_file(firmware_file)
     new_firmware = models.firmwareInfo(
             firmware_name = firmware_name,

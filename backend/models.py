@@ -1,4 +1,4 @@
-from sqlalchemy import Column , Integer , String , DateTime
+from sqlalchemy import Column , Integer , String , DateTime, Boolean
 from datetime import datetime
 from . database import Base
 
@@ -11,5 +11,6 @@ class firmwareInfo(Base):
     firmware_description = Column(String)
     firmware_target_devices = Column(String)
     upload_time  = Column(String)
+    update_mode = Column(Boolean , default= False)
     
 
